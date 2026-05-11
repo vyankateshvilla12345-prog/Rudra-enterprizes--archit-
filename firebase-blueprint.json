@@ -1,0 +1,247 @@
+{
+  "entities": {
+    "Customer": {
+      "title": "Customer Profile",
+      "description": "Customer contact information and commercial rates.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "rate": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "address", "rate", "createdAt"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Generated commercial invoices for customer deliveries.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "dispatchId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "tax": { "type": "number" },
+        "total": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["draft", "issued", "paid"] }
+      },
+      "required": ["invoiceNumber", "customerId", "total", "createdAt"]
+    },
+    "BusinessSettings": {
+      "title": "Business Settings",
+      "description": "Customization parameters for invoices and letterheads.",
+      "type": "object",
+      "properties": {
+        "businessName": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "gstin": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "invoicePrefix": { "type": "string" },
+        "defaultTaxRate": { "type": "number" },
+        "footerText": { "type": "string" },
+        "themeColor": { "type": "string" },
+        "lastInvoiceNumber": { "type": "number" }
+      }
+    },
+      "description": "User account information and roles.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "driver", "accountant"] },
+        "vehicleNumber": { "type": "string" },
+        "activeDispatchId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Stock": {
+      "title": "Stock Summary",
+      "description": "Weight-based cylinder inventory.",
+      "type": "object",
+      "properties": {
+        "items": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "weight": { "type": "string" },
+              "available": { "type": "number" },
+              "total": { "type": "number" }
+            }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["items"]
+    },
+    "Order": {
+      "title": "Distribution Order",
+      "description": "Record of cylinder distribution to customers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "cylinderWeight": { "type": "string" },
+        "quantity": { "type": "number" },
+        "customerName": { "type": "string" },
+        "driverId": { "type": "string" },
+        "driverName": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "assigned", "delivered"] },
+        "location": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["cylinderWeight", "quantity", "customerName", "status", "createdAt"]
+    },
+    "Dispatch": {
+      "title": "Dispatch Record",
+      "description": "A single delivery operation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "driverId": { "type": "string" },
+        "driverName": { "type": "string" },
+        "vehicleNumber": { "type": "string" },
+        "quantity": { "type": "number" },
+        "destination": { "type": "string", "enum": ["Godown", "Office"] },
+        "status": { "type": "string", "enum": ["pending", "picked_up", "delivered", "expired"] },
+        "expiryTime": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "pickedUpAt": { "type": "string", "format": "date-time" },
+        "deliveredAt": { "type": "string", "format": "date-time" },
+        "qrCodeData": { "type": "string" }
+      },
+      "required": ["driverId", "quantity", "destination", "status", "createdAt"]
+    },
+    "Tracking": {
+      "title": "Tracking Ping",
+      "description": "GPS coordinates for a dispatch.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "dispatchId": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["pickup", "delivery", "ping"] }
+      },
+      "required": ["dispatchId", "lat", "lng", "timestamp", "type"]
+    },
+    "Alert": {
+      "title": "System Alert",
+      "description": "Alerts for missed scans or unauthorized actions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["expiry", "unauthorized", "missing_scan"] },
+        "dispatchId": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "resolved": { "type": "boolean" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "scanTime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "message", "createdAt"]
+    },
+    "Cylinder": {
+      "title": "Cylinder Unit",
+      "description": "A single physical LPG cylinder record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "weight": { "type": "string" },
+        "type": { "type": "string", "enum": ["LPG"] },
+        "status": { "type": "string", "enum": ["available", "dispatched", "delivered", "returned"] },
+        "location": { "type": "string" },
+        "qrToken": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["weight", "type", "status", "qrToken", "createdAt"]
+    },
+    "QRCode": {
+      "title": "QR Code Content",
+      "description": "Data associated with a unique cylinder tag.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderId": { "type": "string" },
+        "cylinderIndex": { "type": "number" },
+        "token": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "dispatched", "delivered", "returned"] },
+        "expiryTime": { "type": "string", "format": "date-time" },
+        "labourId": { "type": "string" },
+        "dispatchId": { "type": "string" },
+        "scanCount": { "type": "number" }
+      },
+      "required": ["token", "status"]
+    },
+    "DispatchV2": {
+      "title": "V2 Dispatch Record",
+      "description": "Batch dispatch of multiple cylinders to a driver.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "cylinders": { "type": "array", "items": { "type": "string" } },
+        "labourId": { "type": "string" },
+        "labourName": { "type": "string" },
+        "handoverTo": { "type": "string" },
+        "deliveryTimeLimit": { "type": "string", "format": "date-time" },
+        "pickupTimeLimit": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "assigned", "completed"] }
+      },
+      "required": ["cylinders", "labourId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Customer database"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and roles"
+    },
+    "/stock/{stockId}": {
+      "schema": "Stock",
+      "description": "Stock count summary (usually a single document)"
+    },
+    "/dispatches/{dispatchId}": {
+      "schema": "Dispatch",
+      "description": "Legacy dispatch transaction data"
+    },
+    "/dispatchesV2/{dispatchId}": {
+      "schema": "DispatchV2",
+      "description": "Batch cylinder dispatch data"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer delivery orders"
+    },
+    "/qrCodes/{qrId}": {
+      "schema": "QRCode",
+      "description": "Tracking tokens for individual cylinders"
+    },
+    "/cylinders/{cylinderId}": {
+      "schema": "Cylinder",
+      "description": "Hardware registration for cylinders"
+    },
+    "/tracking/{trackingId}": {
+      "schema": "Tracking",
+      "description": "Live GPS location history"
+    },
+    "/alerts/{alertId}": {
+      "schema": "Alert",
+      "description": "System alerts"
+    }
+  }
+}

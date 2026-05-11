@@ -1,0 +1,6 @@
+{
+  "name": "CylinTrack Pro",
+  "description": "A high-performance, minimal smart cylinder tracking system for modern logistics.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["Real-time tracking", "QR scanning", "Dashboard analytics"]
+}

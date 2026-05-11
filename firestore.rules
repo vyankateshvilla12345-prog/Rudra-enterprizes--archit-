@@ -1,0 +1,139 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Role check - expensive but accurate
+    function hasRole(role) {
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role ||
+        (request.auth.token.email == 'sangitarsalunkhe46@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function isAccountant() {
+      return hasRole('accountant');
+    }
+
+    function isStaff() {
+      return isAdmin() || isAccountant();
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- Heartbeat for connection test ---
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // --- Users ---
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (isOwner(userId) || isStaff());
+      allow update: if isSignedIn() && (
+        (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'vehicleNumber', 'activeDispatchId'])) ||
+        isStaff()
+      );
+    }
+
+    // --- Stock ---
+    match /stock/{stockId} {
+      allow read: if isSignedIn();
+      allow write: if isStaff();
+    }
+
+    // --- Dispatches ---
+    match /dispatches/{dispatchId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff();
+      allow update: if isSignedIn() && (
+        isStaff() ||
+        (
+          resource.data.driverId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'pickedUpAt', 'deliveredAt'])
+        )
+      );
+    }
+
+    match /dispatchesV2/{dispatchId} {
+      allow read: if isSignedIn();
+      allow write: if isStaff();
+    }
+
+    // --- Customers ---
+    match /customers/{customerId} {
+      allow read, write: if isStaff();
+    }
+
+    // --- Invoices ---
+    match /invoices/{invoiceId} {
+      allow read: if isSignedIn();
+      allow write: if isStaff();
+    }
+
+    // --- Settings ---
+    match /settings/business {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- Orders ---
+    match /orders/{orderId} {
+      allow read: if isSignedIn();
+      allow write: if isStaff();
+    }
+
+    // --- Cylinders ---
+    match /cylinders/{cylinderId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // --- QR Codes ---
+    match /qrCodes/{qrId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          // Drivers can update their assigned cylinders
+          (resource.data.labourId == request.auth.uid || request.resource.data.labourId == request.auth.uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'scannedAt', 'deliveryScan', 'pickupScan'])
+        )
+      );
+    }
+
+    // --- Alerts ---
+    match /alerts/{alertId} {
+      allow read: if isStaff();
+      allow create: if isSignedIn();
+      allow update: if isStaff();
+    }
+
+    // --- Tracking ---
+    match /tracking/{trackingId} {
+      allow read: if isStaff();
+      allow create: if isSignedIn();
+    }
+  }
+}
